@@ -7,8 +7,10 @@ type ScreenContentProps = {
 };
 
 export const ScreenContent = ({ title, children }: ScreenContentProps) => {
+  const TIMER_DURATION = 120; // 2 minutos em segundos - pode ser customizado no futuro
+
   const [studyTopic, setStudyTopic] = useState('');
-  const [time, setTime] = useState(0);
+  const [time, setTime] = useState(TIMER_DURATION);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -16,7 +18,18 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
   useEffect(() => {
     if (isRunning && !isPaused) {
       intervalRef.current = setInterval(() => {
-        setTime((prevTime) => prevTime + 1);
+        setTime((prevTime) => {
+          if (prevTime <= 1) {
+            // Tempo acabou
+            setIsRunning(false);
+            setIsPaused(false);
+            Alert.alert('Tempo Esgotado!', 'Seus 2 minutos de estudo terminaram. Parabéns!', [
+              { text: 'OK', onPress: () => setTime(TIMER_DURATION) },
+            ]);
+            return 0;
+          }
+          return prevTime - 1;
+        });
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -53,7 +66,7 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
   };
 
   const stopTimer = () => {
-    Alert.alert('Confirmar', 'Tem certeza que deseja encerrar o cronômetro?', [
+    Alert.alert('Confirmar', 'Tem certeza que deseja encerrar o contador?', [
       {
         text: 'Cancelar',
         style: 'cancel',
@@ -64,7 +77,7 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
         onPress: () => {
           setIsRunning(false);
           setIsPaused(false);
-          setTime(0);
+          setTime(TIMER_DURATION);
           setStudyTopic('');
         },
       },
