@@ -97,6 +97,8 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
           onChangeText={setStudyTopic}
           placeholder="Digite o assunto de estudo..."
           editable={!isRunning}
+          onSubmitEditing={startTimer}
+          returnKeyType="go"
         />
 
         <View className={styles.timerContainer}>
