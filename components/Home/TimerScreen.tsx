@@ -30,7 +30,11 @@ export const TimerScreen = ({
       <View className={styles.separator} />
       <View className={styles.buttonContainer}>
         <TouchableOpacity className={styles.button} onPress={onToggleTimer}>
-          <AntDesign name={isRunning ? 'pause' : 'play'} size={24} color="white" />
+          {isRunning ? (
+            <AntDesign name="pause" size={24} color="white" />
+          ) : (
+            <Entypo name="controller-play" size={24} color="white" />
+          )}
         </TouchableOpacity>
         <TouchableOpacity className={styles.button} onPress={onReset}>
           <AntDesign name="reload1" size={24} color="white" />
