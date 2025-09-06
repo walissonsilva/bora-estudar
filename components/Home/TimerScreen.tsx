@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, Entypo } from '@expo/vector-icons';
 
 type TimerScreenProps = {
   studyTopic: string;
@@ -9,7 +9,7 @@ type TimerScreenProps = {
   isRunning: boolean;
   onToggleTimer: () => void;
   onReset: () => void;
-  onBack: () => void;
+  onStop: () => void;
 };
 
 export const TimerScreen = ({
@@ -19,7 +19,7 @@ export const TimerScreen = ({
   isRunning,
   onToggleTimer,
   onReset,
-  onBack
+  onStop,
 }: TimerScreenProps) => {
   return (
     <>
@@ -30,17 +30,13 @@ export const TimerScreen = ({
       <View className={styles.separator} />
       <View className={styles.buttonContainer}>
         <TouchableOpacity className={styles.button} onPress={onToggleTimer}>
-          <AntDesign
-            name={isRunning ? 'pause' : 'play'}
-            size={24}
-            color="white"
-          />
+          <AntDesign name={isRunning ? 'pause' : 'play'} size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity className={styles.button} onPress={onReset}>
           <AntDesign name="reload1" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity className={styles.button} onPress={onBack}>
-          <AntDesign name="arrowleft" size={24} color="white" />
+        <TouchableOpacity className={styles.button} onPress={onStop}>
+          <Entypo name="controller-stop" size={24} color="white" />
         </TouchableOpacity>
       </View>
     </>

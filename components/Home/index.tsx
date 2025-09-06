@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import { InitialScreen } from './InitialScreen';
 import { TimerScreen } from './TimerScreen';
 
@@ -48,9 +48,24 @@ export const Home = () => {
     }
   };
 
-  const goBack = () => {
-    setShowTimer(false);
-    setIsRunning(false);
+  const stopTimer = () => {
+    Alert.alert('Confirmar', 'Tem certeza que deseja parar o timer?', [
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+      {
+        text: 'Parar',
+        style: 'destructive',
+        onPress: () => {
+          setShowTimer(false);
+          setIsRunning(false);
+          setMinutes(25);
+          setSeconds(0);
+          setStudyTopic('');
+        },
+      },
+    ]);
   };
 
   return (
@@ -69,7 +84,7 @@ export const Home = () => {
           isRunning={isRunning}
           onToggleTimer={toggleTimer}
           onReset={resetTimer}
-          onBack={goBack}
+          onStop={stopTimer}
         />
       )}
     </View>
