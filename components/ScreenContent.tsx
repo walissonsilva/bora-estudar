@@ -1,5 +1,6 @@
 import { Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
+import { AntDesign } from '@expo/vector-icons';
 
 type ScreenContentProps = {
   title: string;
@@ -46,10 +47,9 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
   }, [isRunning, isPaused]);
 
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const startTimer = () => {
@@ -86,9 +86,6 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
 
   return (
     <View className={styles.container}>
-      <Text className={styles.title}>{title}</Text>
-      <View className={styles.separator} />
-
       <View className={styles.studyContainer}>
         <Text className={styles.label}>O que você vai estudar?</Text>
         <TextInput
@@ -101,12 +98,22 @@ export const ScreenContent = ({ title, children }: ScreenContentProps) => {
           returnKeyType="go"
         />
 
-        <View className={styles.timerContainer}>
-          <Text className={styles.timer}>{formatTime(time)}</Text>
-        </View>
+        {/* Timer Display - Only show when running or paused */}
+        {(isRunning || time < TIMER_DURATION) && (
+          <View className={styles.timerContainer}>
+            <Text className={styles.timer}>{formatTime(time)}</Text>
+          </View>
+        )}
 
         <View className={styles.buttonContainer}>
-          {!isRunning ? (
+          {!isRunning && time === TIMER_DURATION ? (
+            <TouchableOpacity
+              className={styles.playButton}
+              onPress={startTimer}
+              disabled={!studyTopic.trim()}>
+              <AntDesign name="play" size={32} color="white" />
+            </TouchableOpacity>
+          ) : !isRunning ? (
             <TouchableOpacity className={styles.startButton} onPress={startTimer}>
               <Text className={styles.buttonText}>Iniciar</Text>
             </TouchableOpacity>
@@ -144,4 +151,6 @@ const styles = {
   resumeButton: `bg-blue-500 px-6 py-3 rounded-lg`,
   stopButton: `bg-red-500 px-6 py-3 rounded-lg`,
   buttonText: `text-white font-semibold text-base`,
+  playButton: `bg-green-500 w-20 h-20 rounded-full items-center justify-center`,
+  timerLabel: `text-sm text-gray-600 text-center mt-1`,
 };
