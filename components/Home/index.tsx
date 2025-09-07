@@ -3,6 +3,7 @@ import { View, Alert, AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { NotificationManager } from '../../utils/notifications';
+import { Header } from '../Header';
 import { InitialScreen } from './InitialScreen';
 import { TimerScreen } from './TimerScreen';
 
@@ -13,6 +14,11 @@ export const Home = () => {
   const [studyTopic, setStudyTopic] = useState('');
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
+  
+  // Mock data para o Header
+  const [username] = useState('Estudante');
+  const [xp] = useState(300);
+  const [maxXp] = useState(1000);
 
   const appState = useRef(AppState.currentState);
   const endTimeRef = useRef<number | null>(null);
@@ -222,18 +228,21 @@ export const Home = () => {
     saveTimerState();
   };
 
-  const startStudySession = async () => {
-    if (studyTopic.trim()) {
-      const now = Date.now();
-      const totalSeconds = minutes * 60 + seconds;
-      endTimeRef.current = now + totalSeconds * 1000;
-
-      // Agendar notificação
-      await scheduleTimerNotification(endTimeRef.current);
-
-      setShowTimer(true);
-      saveTimerState();
+  const startTimer = async () => {
+    if (!studyTopic.trim()) {
+      Alert.alert('Atenção', 'Por favor, informe o que você vai estudar.');
+      return;
     }
+
+    const now = Date.now();
+    const totalSeconds = minutes * 60 + seconds;
+    endTimeRef.current = now + totalSeconds * 1000;
+
+    // Agendar notificação
+    await scheduleTimerNotification(endTimeRef.current);
+
+    setShowTimer(true);
+    saveTimerState();
   };
 
   const stopTimer = () => {
@@ -267,22 +276,28 @@ export const Home = () => {
   };
 
   return (
-    <View className={styles.container}>
-      {!showTimer ? (
-        <InitialScreen
-          studyTopic={studyTopic}
-          onStudyTopicChange={setStudyTopic}
-          onStart={startStudySession}
-        />
-      ) : (
-        <TimerScreen
-          studyTopic={studyTopic}
-          minutes={minutes}
-          seconds={seconds}
-          onReset={resetTimer}
-          onStop={stopTimer}
-        />
-      )}
+    <View className="flex-1">
+      {/* Header sempre visível */}
+      <Header username={username} xp={xp} maxXp={maxXp} />
+      
+      {/* Conteúdo condicional */}
+      <View className={styles.container}>
+        {!showTimer ? (
+          <InitialScreen
+            studyTopic={studyTopic}
+            onStudyTopicChange={setStudyTopic}
+            onStart={startTimer}
+          />
+        ) : (
+          <TimerScreen
+            studyTopic={studyTopic}
+            minutes={minutes}
+            seconds={seconds}
+            onReset={resetTimer}
+            onStop={stopTimer}
+          />
+        )}
+      </View>
     </View>
   );
 };
