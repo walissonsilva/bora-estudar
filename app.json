@@ -45,6 +45,11 @@
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK"
       ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ebd6df0e-f904-48e8-81ea-757b83f4034f"
+      }
     }
   }
 }
