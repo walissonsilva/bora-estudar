@@ -6,8 +6,6 @@ type TimerScreenProps = {
   studyTopic: string;
   minutes: number;
   seconds: number;
-  isRunning: boolean;
-  onToggleTimer: () => void;
   onReset: () => void;
   onStop: () => void;
 };
@@ -16,8 +14,6 @@ export const TimerScreen = ({
   studyTopic,
   minutes,
   seconds,
-  isRunning,
-  onToggleTimer,
   onReset,
   onStop,
 }: TimerScreenProps) => {
@@ -29,13 +25,6 @@ export const TimerScreen = ({
       </Text>
       <View className={styles.separator} />
       <View className={styles.buttonContainer}>
-        <TouchableOpacity className={styles.button} onPress={onToggleTimer}>
-          {isRunning ? (
-            <AntDesign name="pause" size={24} color="white" />
-          ) : (
-            <Entypo name="controller-play" size={24} color="white" />
-          )}
-        </TouchableOpacity>
         <TouchableOpacity className={styles.button} onPress={onReset}>
           <AntDesign name="reload1" size={24} color="white" />
         </TouchableOpacity>

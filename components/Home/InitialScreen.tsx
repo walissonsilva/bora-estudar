@@ -1,6 +1,5 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { AntDesign, Entypo } from '@expo/vector-icons';
+import { Entypo } from '@expo/vector-icons';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type InitialScreenProps = {
   studyTopic: string;

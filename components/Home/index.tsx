@@ -11,7 +11,7 @@ export const Home = () => {
   const [studyTopic, setStudyTopic] = useState('');
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+
   const appState = useRef(AppState.currentState);
   const startTimeRef = useRef<number | null>(null);
   const totalDurationRef = useRef<number>(0);
@@ -24,7 +24,7 @@ export const Home = () => {
         studyTopic,
         minutes,
         seconds,
-        isRunning,
+
         startTime: startTimeRef.current,
         totalDuration: totalDurationRef.current,
       };
@@ -46,7 +46,7 @@ export const Home = () => {
         setStudyTopic(timerState.studyTopic);
         setMinutes(timerState.minutes);
         setSeconds(timerState.seconds);
-        setIsRunning(timerState.isRunning);
+
         startTimeRef.current = timerState.startTime;
         totalDurationRef.current = timerState.totalDuration;
       }
@@ -70,7 +70,6 @@ export const Home = () => {
     setSeconds(newSeconds);
 
     if (remaining === 0) {
-      setIsRunning(false);
       Alert.alert('Tempo Esgotado!', 'Seu tempo de estudo terminou!');
     }
   };
@@ -83,7 +82,7 @@ export const Home = () => {
         loadTimerState().then(() => {
           // Aguardar um pouco para garantir que o estado foi atualizado
           setTimeout(() => {
-            if (isRunning) calculateRemainingTime();
+            calculateRemainingTime();
           }, 100);
         });
       } else if (nextAppState.match(/inactive|background/)) {
@@ -107,7 +106,7 @@ export const Home = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (isRunning && (minutes > 0 || seconds > 0)) {
+    if (minutes > 0 || seconds > 0) {
       interval = setInterval(() => {
         if (seconds > 0) {
           setSeconds(seconds - 1);
@@ -116,30 +115,23 @@ export const Home = () => {
           setSeconds(59);
         }
       }, 1000);
-    } else if (minutes === 0 && seconds === 0 && isRunning) {
-      setIsRunning(false);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, minutes, seconds]);
+  }, [minutes, seconds]);
 
   // Salvar estado sempre que houver mudanças
   useEffect(() => {
     if (showTimer) {
       saveTimerState();
     }
-  }, [showTimer, studyTopic, minutes, seconds, isRunning]);
-
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
-  };
+  }, [showTimer, studyTopic, minutes, seconds]);
 
   const resetTimer = () => {
     setMinutes(25);
     setSeconds(0);
-    setIsRunning(false);
     startTimeRef.current = null;
     totalDurationRef.current = 0;
     saveTimerState();
@@ -154,7 +146,6 @@ export const Home = () => {
       totalDurationRef.current = totalSeconds;
 
       setShowTimer(true);
-      setIsRunning(true);
     }
   };
 
@@ -169,7 +160,6 @@ export const Home = () => {
         style: 'destructive',
         onPress: async () => {
           setShowTimer(false);
-          setIsRunning(false);
           setMinutes(25);
           setSeconds(0);
           setStudyTopic('');
@@ -200,8 +190,6 @@ export const Home = () => {
           studyTopic={studyTopic}
           minutes={minutes}
           seconds={seconds}
-          isRunning={isRunning}
-          onToggleTimer={toggleTimer}
           onReset={resetTimer}
           onStop={stopTimer}
         />
