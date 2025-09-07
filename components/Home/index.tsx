@@ -13,8 +13,7 @@ export const Home = () => {
   const [seconds, setSeconds] = useState(0);
 
   const appState = useRef(AppState.currentState);
-  const startTimeRef = useRef<number | null>(null);
-  const totalDurationRef = useRef<number>(0);
+  const endTimeRef = useRef<number | null>(null);
 
   // Salvar estado do timer
   const saveTimerState = async () => {
@@ -22,11 +21,7 @@ export const Home = () => {
       const timerState = {
         showTimer,
         studyTopic,
-        minutes,
-        seconds,
-
-        startTime: startTimeRef.current,
-        totalDuration: totalDurationRef.current,
+        endTime: endTimeRef.current,
       };
       await AsyncStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerState));
       console.log(timerState);
@@ -44,24 +39,24 @@ export const Home = () => {
         const timerState = JSON.parse(savedState);
         setShowTimer(timerState.showTimer);
         setStudyTopic(timerState.studyTopic);
-        setMinutes(timerState.minutes);
-        setSeconds(timerState.seconds);
-
-        startTimeRef.current = timerState.startTime;
-        totalDurationRef.current = timerState.totalDuration;
+        endTimeRef.current = timerState.endTime;
+        
+        // Se há um timer ativo, calcular tempo restante
+        if (timerState.showTimer && timerState.endTime) {
+          calculateRemainingTime();
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar estado do timer:', error);
     }
   };
 
-  // Calcular tempo restante baseado no timestamp
+  // Calcular tempo restante baseado no timestamp final
   const calculateRemainingTime = () => {
-    if (!startTimeRef.current) return;
+    if (!endTimeRef.current) return;
 
     const now = Date.now();
-    const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-    const remaining = Math.max(0, totalDurationRef.current - elapsed);
+    const remaining = Math.max(0, Math.floor((endTimeRef.current - now) / 1000));
 
     const newMinutes = Math.floor(remaining / 60);
     const newSeconds = remaining % 60;
@@ -70,24 +65,41 @@ export const Home = () => {
     setSeconds(newSeconds);
 
     if (remaining === 0) {
-      Alert.alert('Tempo Esgotado!', 'Seu tempo de estudo terminou!');
+      Alert.alert('Tempo Esgotado!', 'Seu tempo de estudo terminou!', [
+        {
+          text: 'OK',
+          onPress: async () => {
+            setShowTimer(false);
+            setStudyTopic('');
+            setMinutes(25);
+            setSeconds(0);
+            endTimeRef.current = null;
+            await AsyncStorage.removeItem(TIMER_STORAGE_KEY);
+          }
+        }
+      ]);
+      return false;
     }
+    return true;
   };
 
   // AppState listener
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        // App voltou ao foreground
-        loadTimerState().then(() => {
-          // Aguardar um pouco para garantir que o estado foi atualizado
-          setTimeout(() => {
-            calculateRemainingTime();
-          }, 100);
-        });
+        // App voltou ao foreground - recalcular tempo restante
+        if (showTimer && endTimeRef.current) {
+          const isActive = calculateRemainingTime();
+          if (!isActive) {
+            // Timer já terminou enquanto estava em background
+            return;
+          }
+        }
       } else if (nextAppState.match(/inactive|background/)) {
-        // App foi para background
-        // saveTimerState();
+        // App foi para background - salvar estado
+        if (showTimer) {
+          saveTimerState();
+        }
       }
       appState.current = nextAppState;
     };
@@ -100,19 +112,18 @@ export const Home = () => {
     return () => {
       subscription?.remove();
     };
-  }, []);
+  }, [showTimer]);
 
-  // Timer principal
+  // Timer principal baseado em timestamps
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (minutes > 0 || seconds > 0) {
+    if (showTimer && endTimeRef.current) {
       interval = setInterval(() => {
-        if (seconds > 0) {
-          setSeconds(seconds - 1);
-        } else if (minutes > 0) {
-          setMinutes(minutes - 1);
-          setSeconds(59);
+        const isActive = calculateRemainingTime();
+        if (!isActive) {
+          // Timer terminou, limpar interval
+          if (interval) clearInterval(interval);
         }
       }, 1000);
     }
@@ -120,20 +131,21 @@ export const Home = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [minutes, seconds]);
+  }, [showTimer]);
 
-  // Salvar estado sempre que houver mudanças
+  // Salvar estado quando timer é iniciado ou tópico muda
   useEffect(() => {
-    if (showTimer) {
+    if (showTimer && endTimeRef.current) {
       saveTimerState();
     }
-  }, [showTimer, studyTopic, minutes, seconds]);
+  }, [showTimer, studyTopic]);
 
   const resetTimer = () => {
+    const now = Date.now();
+    const totalSeconds = 25 * 60; // 25 minutos em segundos
+    endTimeRef.current = now + (totalSeconds * 1000);
     setMinutes(25);
     setSeconds(0);
-    startTimeRef.current = null;
-    totalDurationRef.current = 0;
     saveTimerState();
   };
 
@@ -141,11 +153,10 @@ export const Home = () => {
     if (studyTopic.trim()) {
       const now = Date.now();
       const totalSeconds = minutes * 60 + seconds;
-
-      startTimeRef.current = now;
-      totalDurationRef.current = totalSeconds;
+      endTimeRef.current = now + (totalSeconds * 1000);
 
       setShowTimer(true);
+      saveTimerState();
     }
   };
 
@@ -163,8 +174,7 @@ export const Home = () => {
           setMinutes(25);
           setSeconds(0);
           setStudyTopic('');
-          startTimeRef.current = null;
-          totalDurationRef.current = 0;
+          endTimeRef.current = null;
 
           // Limpar estado salvo
           try {
