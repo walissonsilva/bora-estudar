@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Alert, AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
+import { NotificationManager } from '../../utils/notifications';
 import { InitialScreen } from './InitialScreen';
 import { TimerScreen } from './TimerScreen';
 
@@ -14,6 +16,40 @@ export const Home = () => {
 
   const appState = useRef(AppState.currentState);
   const endTimeRef = useRef<number | null>(null);
+
+  // Configurar permissões de notificação
+  const requestNotificationPermission = async () => {
+    try {
+      await NotificationManager.requestPermissions();
+    } catch (error) {
+      console.error('Erro ao solicitar permissão de notificação:', error);
+    }
+  };
+
+  // Agendar notificação para quando o timer terminar
+  const scheduleTimerNotification = async (endTime: number) => {
+    try {
+      const now = Date.now();
+      const secondsUntilEnd = Math.max(0, Math.floor((endTime - now) / 1000));
+
+      if (secondsUntilEnd > 0) {
+        await NotificationManager.scheduleTimerNotification(secondsUntilEnd);
+        console.log('Notificação agendada para:', new Date(endTime));
+      }
+    } catch (error) {
+      console.error('Erro ao agendar notificação:', error);
+    }
+  };
+
+  // Cancelar notificação agendada
+  const cancelTimerNotification = async () => {
+    try {
+      await NotificationManager.cancelNotification();
+      console.log('Notificação cancelada');
+    } catch (error) {
+      console.error('Erro ao cancelar notificação:', error);
+    }
+  };
 
   // Salvar estado do timer
   const saveTimerState = async () => {
@@ -40,7 +76,7 @@ export const Home = () => {
         setShowTimer(timerState.showTimer);
         setStudyTopic(timerState.studyTopic);
         endTimeRef.current = timerState.endTime;
-        
+
         // Se há um timer ativo, calcular tempo restante
         if (timerState.showTimer && timerState.endTime) {
           calculateRemainingTime();
@@ -69,22 +105,49 @@ export const Home = () => {
         {
           text: 'OK',
           onPress: async () => {
+            // Cancelar notificação
+            await cancelTimerNotification();
+
             setShowTimer(false);
             setStudyTopic('');
             setMinutes(25);
             setSeconds(0);
             endTimeRef.current = null;
             await AsyncStorage.removeItem(TIMER_STORAGE_KEY);
-          }
-        }
+          },
+        },
       ]);
       return false;
     }
     return true;
   };
 
-  // AppState listener
+  // Configuração inicial e listeners
   useEffect(() => {
+    const initializeApp = async () => {
+      // Solicitar permissões de notificação
+      await requestNotificationPermission();
+
+      // Configurar listener para quando usuário clica na notificação
+      const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
+        console.log('Notificação recebida:', notification);
+      });
+
+      const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log('Usuário clicou na notificação do timer:', response);
+      });
+
+      const unsubscribe = () => {
+        notificationListener.remove();
+        responseListener.remove();
+      };
+
+      // Carregar estado inicial
+      await loadTimerState();
+
+      return unsubscribe;
+    };
+
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // App voltou ao foreground - recalcular tempo restante
@@ -104,13 +167,16 @@ export const Home = () => {
       appState.current = nextAppState;
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    let notificationUnsubscribe: (() => void) | undefined;
 
-    // Carregar estado inicial
-    loadTimerState();
+    initializeApp().then((unsubscribe) => {
+      notificationUnsubscribe = unsubscribe;
+    });
 
     return () => {
-      subscription?.remove();
+      appStateSubscription?.remove();
+      notificationUnsubscribe?.();
     };
   }, [showTimer]);
 
@@ -140,20 +206,30 @@ export const Home = () => {
     }
   }, [showTimer, studyTopic]);
 
-  const resetTimer = () => {
+  const resetTimer = async () => {
+    // Cancelar notificação anterior
+    await cancelTimerNotification();
+
     const now = Date.now();
     const totalSeconds = 25 * 60; // 25 minutos em segundos
-    endTimeRef.current = now + (totalSeconds * 1000);
+    endTimeRef.current = now + totalSeconds * 1000;
+
+    // Agendar nova notificação
+    await scheduleTimerNotification(endTimeRef.current);
+
     setMinutes(25);
     setSeconds(0);
     saveTimerState();
   };
 
-  const startStudySession = () => {
+  const startStudySession = async () => {
     if (studyTopic.trim()) {
       const now = Date.now();
       const totalSeconds = minutes * 60 + seconds;
-      endTimeRef.current = now + (totalSeconds * 1000);
+      endTimeRef.current = now + totalSeconds * 1000;
+
+      // Agendar notificação
+      await scheduleTimerNotification(endTimeRef.current);
 
       setShowTimer(true);
       saveTimerState();
@@ -170,10 +246,13 @@ export const Home = () => {
         text: 'Parar',
         style: 'destructive',
         onPress: async () => {
+          // Cancelar notificação
+          await cancelTimerNotification();
+
           setShowTimer(false);
+          setStudyTopic('');
           setMinutes(25);
           setSeconds(0);
-          setStudyTopic('');
           endTimeRef.current = null;
 
           // Limpar estado salvo
