@@ -12,7 +12,7 @@ export const InitialScreen = ({ studyTopic, onStudyTopicChange, onStart }: Initi
   return (
     <>
       <Text className={styles.questionText}>O que vamos estudar hoje?</Text>
-      <View className={styles.inputContainer}>
+      <View className={styles.inputRow}>
         <TextInput
           className={styles.input}
           value={studyTopic}
@@ -22,10 +22,9 @@ export const InitialScreen = ({ studyTopic, onStudyTopicChange, onStart }: Initi
           returnKeyType="go"
         />
         <TouchableOpacity
-          className={styles.startButton}
+          className={styles.playButton}
           onPress={onStart}
           disabled={!studyTopic.trim()}>
-          <Text className={styles.startButtonText}>Iniciar</Text>
           <Entypo name="controller-play" size={24} color="white" />
         </TouchableOpacity>
       </View>
@@ -35,8 +34,7 @@ export const InitialScreen = ({ studyTopic, onStudyTopicChange, onStart }: Initi
 
 const styles = {
   questionText: `text-3xl font-bold text-center mb-8 text-gray-800`,
-  inputContainer: `items-center gap-4 w-full max-w-md`,
-  input: `w-full border border-gray-300 rounded-lg px-4 py-3 text-base bg-white`,
-  startButton: `bg-green-500 px-6 py-3 rounded-lg items-center justify-center flex-row gap-2 mt-4`,
-  startButtonText: `text-white font-semibold text-lg`,
+  inputRow: `flex-row items-center gap-4 w-full max-w-md`,
+  input: `flex-1 border border-gray-300 rounded-lg px-4 py-3 text-base bg-white`,
+  playButton: `bg-green-500 w-12 h-12 rounded-full items-center justify-center`,
 };
