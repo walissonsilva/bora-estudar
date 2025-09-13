@@ -14,7 +14,7 @@ export const Home = () => {
   const [studyTopic, setStudyTopic] = useState('');
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
-  
+
   // Mock data para o Header
   const [username] = useState('Estudante');
   const [xp] = useState(300);
@@ -277,30 +277,27 @@ export const Home = () => {
 
   return (
     <View className="flex-1">
-      {/* Header sempre visível */}
       <Header username={username} xp={xp} maxXp={maxXp} />
-      
-      {/* Conteúdo condicional */}
-      <View className={styles.container}>
-        {!showTimer ? (
-          <InitialScreen
-            studyTopic={studyTopic}
-            onStudyTopicChange={setStudyTopic}
-            onStart={startTimer}
-          />
-        ) : (
-          <TimerScreen
-            studyTopic={studyTopic}
-            minutes={minutes}
-            seconds={seconds}
-            onReset={resetTimer}
-            onStop={stopTimer}
-          />
-        )}
+
+      <View>
+        <View className="w-full rounded-xl bg-white p-6 shadow-md">
+          {!showTimer ? (
+            <InitialScreen
+              studyTopic={studyTopic}
+              onStudyTopicChange={setStudyTopic}
+              onStart={startTimer}
+            />
+          ) : (
+            <TimerScreen
+              studyTopic={studyTopic}
+              minutes={minutes}
+              seconds={seconds}
+              onReset={resetTimer}
+              onStop={stopTimer}
+            />
+          )}
+        </View>
       </View>
     </View>
   );
-};
-const styles = {
-  container: `flex-1 bg-gray-50 items-center justify-center px-6`,
 };

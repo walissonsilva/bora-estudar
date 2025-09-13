@@ -26,7 +26,7 @@ export const TimerScreen = ({
       <View className={styles.separator} />
       <View className={styles.buttonContainer}>
         <TouchableOpacity className={styles.resetButton} onPress={onReset}>
-          <AntDesign name="reload1" size={24} color="white" />
+          <AntDesign name="reload" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity className={styles.stopButton} onPress={onStop}>
           <Entypo name="controller-stop" size={24} color="white" />

@@ -12,7 +12,7 @@ export const Header = ({ username = 'Estudante', xp = 300, maxXp = 1000 }: Heade
   const progressPercentage = Math.min(100, (xp / maxXp) * 100);
 
   return (
-    <View className="mx-6 mb-8 mt-12">
+    <View className="mb-8 mt-12">
       {/* Avatar e informações do usuário */}
       <View className="mb-2 flex-row items-center">
         <View className="mr-3 h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-blue-100">
